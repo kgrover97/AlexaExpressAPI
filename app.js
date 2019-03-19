@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 import db from "./database";
 
 const port = 3000;
-const filePath = '/Users/kgrover/School/cs448/MockProject/src/HelloWorld.java';
+const filePath = __dirname + '/MockProject/src/HelloWorld.java';
 const NO_COMMENT = "There is no comment available for this line";
 
 app.use(bodyParser.json());

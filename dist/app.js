@@ -13,7 +13,7 @@ var bodyParser = require('body-parser');
 
 
 var port = 3000;
-var filePath = '/Users/kgrover/School/cs448/MockProject/src/HelloWorld.java';
+var filePath = __dirname + '/MockProject/src/HelloWorld.java';
 var NO_COMMENT = "There is no comment available for this line";
 
 app.use(bodyParser.json());
