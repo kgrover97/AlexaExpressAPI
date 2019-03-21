@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const fs = require('fs');
 const bodyParser = require('body-parser');
+const http = require('http');
 import db from "./database";
 
 const port = 3000;
@@ -9,7 +10,18 @@ const filePath = __dirname + '/MockProject/src/HelloWorld.java';
 const NO_COMMENT = "There is no comment available for this line";
 
 app.use(bodyParser.json());
-app.get('/', (req, res) => res.send('Hello World!'));
+
+app.get('/', (req, res) => {
+    http.get({
+        hostname: '142.93.158.249',
+        port: 3000,
+        path: '/build-files',
+        agent: false  // Create a new agent just for this one request
+    }, (result) => {
+        // Do stuff with response
+        res.send(result.toString());
+    });
+});
 
 app.get('/build-files', function (req, res) {
     fs.readFile(filePath, (err, data) => {
@@ -21,7 +33,7 @@ app.get('/build-files', function (req, res) {
             db.fileData[i] = dataParsed[i];
         }
 
-        res.send(db.fileData.toString());
+        res.status(200).send(true);
     });
 });
 
@@ -64,7 +76,7 @@ app.post('/add-line-comment-range', function (req, res) {
     res.status(200).send(true);
 });
 
-app.get('/get-line-comment', function (req, res) {
+app.post('/get-line-comment', function (req, res) {
     let body = req.body;
 
     if (!body.hasOwnProperty("line")) {

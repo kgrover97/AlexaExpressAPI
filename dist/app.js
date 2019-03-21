@@ -10,6 +10,7 @@ var express = require('express');
 var app = express();
 var fs = require('fs');
 var bodyParser = require('body-parser');
+var http = require('http');
 
 
 var port = 3000;
@@ -17,8 +18,17 @@ var filePath = __dirname + '/MockProject/src/HelloWorld.java';
 var NO_COMMENT = "There is no comment available for this line";
 
 app.use(bodyParser.json());
+
 app.get('/', function (req, res) {
-    return res.send('Hello World!');
+    http.get({
+        hostname: '142.93.158.249',
+        port: 3000,
+        path: '/build-files',
+        agent: false // Create a new agent just for this one request
+    }, function (result) {
+        // Do stuff with response
+        res.send(result.toString());
+    });
 });
 
 app.get('/build-files', function (req, res) {
