@@ -63,8 +63,12 @@ app.post('/add-line-comment-range', function (req, res) {
         return;
     }
 
+
+    console.log("Start: " + body.start);
+    console.log("End: " + body.end);
     for (let i = body.start; i <= body.end; i++) {
         let lineValue = db.fileData[i - 1];
+        console.log("Line Val: " + lineValue);
         if (!db.fileDict.hasOwnProperty(lineValue)) {
             db.fileDict[lineValue] = [];
             console.log("Line " + i + " did not have comments so an array was added");
@@ -73,6 +77,7 @@ app.post('/add-line-comment-range', function (req, res) {
         console.log("Line " + i + " had comment: " + body.comment + " added to it");
     }
 
+    console.log("Found the following in DB: ");
     console.log(JSON.stringify(db.fileDict));
 
     res.status(200).send(true);
