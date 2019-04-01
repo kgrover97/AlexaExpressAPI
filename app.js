@@ -67,8 +67,10 @@ app.post('/add-line-comment-range', function (req, res) {
         let lineValue = db.fileData[i - 1];
         if (!db.fileDict.hasOwnProperty(lineValue)) {
             db.fileDict[lineValue] = [];
+            console.log("Line " + i + " did not have comments so an array was added");
         }
         db.fileDict[lineValue].push(body.comment);
+        console.log("Line " + i + " had comment: " + body.comment + " added to it");
     }
 
     console.log(JSON.stringify(db.fileDict));
