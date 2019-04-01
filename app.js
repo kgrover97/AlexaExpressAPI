@@ -57,8 +57,10 @@ app.post('/add-line-comment', function (req, res) {
 
 app.post('/add-line-comment-range', function (req, res) {
     let body = req.body;
+    console.log(body);
 
     if (!body.hasOwnProperty("start") || !body.hasOwnProperty("end") || !body.hasOwnProperty("comment")) {
+        console.log("Invalid body");
         res.status(400).send("Invalid Request follow format:\n{\n'start': number,\n'end': number,\n'comment': String\n}");
         return;
     }
