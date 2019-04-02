@@ -41,7 +41,7 @@ app.get('/build-files', function (req, res) {
             _database2.default.fileData[i] = dataParsed[i];
         }
 
-        res.send(_database2.default.fileData.toString());
+        res.status(200).send(true);
     });
 });
 
@@ -54,37 +54,54 @@ app.post('/add-line-comment', function (req, res) {
     }
 
     var lineValue = _database2.default.fileData[body.line - 1];
+
+    if (lineValue === undefined) {
+        res.status(202).send("Line is empty, please select a different line.");
+    }
+
     if (!_database2.default.fileDict.hasOwnProperty(lineValue)) {
         _database2.default.fileDict[lineValue] = [];
     }
+
     _database2.default.fileDict[lineValue].push(body.comment);
 
     // TODO: Change to boolean
-    res.status(200).send(lineValue + ": " + _database2.default.fileDict[lineValue]);
+    res.status(200).send("Line " + body.line + " set to " + body.comment);
 });
 
 app.post('/add-line-comment-range', function (req, res) {
     var body = req.body;
+    console.log(body);
 
     if (!body.hasOwnProperty("start") || !body.hasOwnProperty("end") || !body.hasOwnProperty("comment")) {
+        console.log("Invalid body");
         res.status(400).send("Invalid Request follow format:\n{\n'start': number,\n'end': number,\n'comment': String\n}");
         return;
     }
 
+    console.log("Start: " + body.start);
+    console.log("End: " + body.end);
     for (var i = body.start; i <= body.end; i++) {
         var lineValue = _database2.default.fileData[i - 1];
+        if (lineValue === undefined) continue;
+
+        console.log("Line Val: " + lineValue);
+
         if (!_database2.default.fileDict.hasOwnProperty(lineValue)) {
             _database2.default.fileDict[lineValue] = [];
+            console.log("Line " + i + " did not have comments so an array was added");
         }
         _database2.default.fileDict[lineValue].push(body.comment);
+        console.log("Line " + i + " had comment: " + body.comment + " added to it");
     }
 
+    console.log("Found the following in DB: ");
     console.log(JSON.stringify(_database2.default.fileDict));
 
     res.status(200).send(true);
 });
 
-app.get('/get-line-comment', function (req, res) {
+app.post('/get-line-comment', function (req, res) {
     var body = req.body;
 
     if (!body.hasOwnProperty("line")) {
@@ -92,6 +109,7 @@ app.get('/get-line-comment', function (req, res) {
     }
 
     var lineValue = _database2.default.fileData[body.line - 1];
+
     if (_database2.default.fileDict.hasOwnProperty(lineValue)) {
         var lineComment = _database2.default.fileDict[lineValue];
         res.status(200).send(lineComment);

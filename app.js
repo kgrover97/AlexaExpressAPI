@@ -46,13 +46,19 @@ app.post('/add-line-comment', function (req, res) {
     }
 
     let lineValue = db.fileData[body.line - 1];
+
+    if(lineValue === undefined){
+        res.status(202).send("Line is empty, please select a different line.");
+    }
+
     if (!db.fileDict.hasOwnProperty(lineValue)) {
         db.fileDict[lineValue] = [];
     }
+
     db.fileDict[lineValue].push(body.comment);
 
     // TODO: Change to boolean
-    res.status(200).send(lineValue + ": " + db.fileDict[lineValue]);
+    res.status(200).send("Line " + body.line + " set to " + body.comment);
 });
 
 app.post('/add-line-comment-range', function (req, res) {
@@ -70,7 +76,10 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("End: " + body.end);
     for (let i = body.start; i <= body.end; i++) {
         let lineValue = db.fileData[i - 1];
+        if(lineValue === undefined) continue;
+
         console.log("Line Val: " + lineValue);
+
         if (!db.fileDict.hasOwnProperty(lineValue)) {
             db.fileDict[lineValue] = [];
             console.log("Line " + i + " did not have comments so an array was added");
@@ -93,6 +102,7 @@ app.post('/get-line-comment', function (req, res) {
     }
 
     let lineValue = db.fileData[body.line - 1];
+
     if (db.fileDict.hasOwnProperty(lineValue)) {
         let lineComment = db.fileDict[lineValue];
         res.status(200).send(lineComment);
