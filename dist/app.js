@@ -10,12 +10,14 @@ var express = require('express');
 var app = express();
 var fs = require('fs');
 var bodyParser = require('body-parser');
-var http = require('http');
+// const http = require('http');
+// const request = require('request');
+var rp = require('request-promise');
 
 
 var port = 3000;
 var filePath = __dirname + '/MockProject/src/HelloWorld.java';
-var NO_COMMENT = "There is no comment available for this line";
+var NO_COMMENT = "There is no comment on this line, check that this line is not a for loop or a blank line";
 
 app.use(bodyParser.json());
 
@@ -32,17 +34,55 @@ app.get('/', function (req, res) {
 });
 
 app.get('/build-files', function (req, res) {
-    fs.readFile(filePath, function (err, data) {
-        if (err) throw err;
-        var dataParsed = data.toString().split("\n");
 
-        for (var i = 0; i < dataParsed.length; i++) {
-            // console.log("Data: " + dataParsed[i]);
-            _database2.default.fileData[i] = dataParsed[i];
-        }
+    var options = {
+        uri: 'https://api.github.com/repos/kgrover97/HelloWorld/contents/HelloWorld.java',
+        qs: {
+            access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+        },
+        headers: {
+            'User-Agent': 'Request-Promise'
+        },
+        json: true
+    };
 
-        res.status(200).send(true);
+    rp(options).then(function (data) {
+        console.log('Data: ', data);
+        console.log("Data URL is: " + data.download_url);
+
+        var fileOptions = {
+            uri: data.download_url,
+            qs: {
+                access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+            },
+            headers: {
+                'User-Agent': 'Request-Promise'
+            }
+        };
+
+        rp(fileOptions).then(function (fileData) {
+            var dataParsed = fileData.split("\n");
+            console.log("Data Parsed: " + fileData);
+            for (var i = 0; i < dataParsed.length; i++) {
+                _database2.default.fileData[i] = dataParsed[i];
+            }
+            res.status(200).send(dataParsed);
+        }).catch(function (err) {
+            console.log("Database fill error: " + err);
+            res.status(401).send("Could not fill database");
+        });
+    }).catch(function (err) {
+        console.log("Fail in getting git data: " + err);
+        res.status(401).send("Fail in getting git data");
     });
+});
+
+app.get('/all-comments', function (req, res) {
+    res.status(200).send(_database2.default.fileData);
+});
+
+app.get('/get-dict', function (req, res) {
+    res.status(200).send(_database2.default.fileDict);
 });
 
 app.post('/add-line-comment', function (req, res) {
@@ -57,6 +97,10 @@ app.post('/add-line-comment', function (req, res) {
 
     if (lineValue === undefined) {
         res.status(202).send("Line is empty, please select a different line.");
+        return;
+    } else if (lineValue.includes("for(") || lineValue.includes("for (")) {
+        res.status(202).send("Line is a for loop, please select a different line within the loop or select .");
+        return;
     }
 
     if (!_database2.default.fileDict.hasOwnProperty(lineValue)) {
@@ -65,7 +109,6 @@ app.post('/add-line-comment', function (req, res) {
 
     _database2.default.fileDict[lineValue].push(body.comment);
 
-    // TODO: Change to boolean
     res.status(200).send("Line " + body.line + " set to " + body.comment);
 });
 
@@ -83,7 +126,7 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("End: " + body.end);
     for (var i = body.start; i <= body.end; i++) {
         var lineValue = _database2.default.fileData[i - 1];
-        if (lineValue === undefined) continue;
+        if (lineValue === undefined || lineValue.includes("for(") || lineValue.includes("for (")) continue;
 
         console.log("Line Val: " + lineValue);
 

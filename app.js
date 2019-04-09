@@ -2,12 +2,14 @@ const express = require('express');
 const app = express();
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const http = require('http');
+// const http = require('http');
+// const request = require('request');
+const rp = require('request-promise');
 import db from "./database";
 
 const port = 3000;
 const filePath = __dirname + '/MockProject/src/HelloWorld.java';
-const NO_COMMENT = "There is no comment available for this line";
+const NO_COMMENT = "There is no comment on this line, check that this line is not a for loop or a blank line";
 
 app.use(bodyParser.json());
 
@@ -24,17 +26,61 @@ app.get('/', (req, res) => {
 });
 
 app.get('/build-files', function (req, res) {
-    fs.readFile(filePath, (err, data) => {
-        if (err) throw err;
-        let dataParsed = data.toString().split("\n");
 
-        for (let i = 0; i < dataParsed.length; i++) {
-            // console.log("Data: " + dataParsed[i]);
-            db.fileData[i] = dataParsed[i];
-        }
+    const options = {
+        uri: 'https://api.github.com/repos/kgrover97/HelloWorld/contents/HelloWorld.java',
+        qs: {
+            access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+        },
+        headers: {
+            'User-Agent': 'Request-Promise'
+        },
+        json: true
+    };
 
-        res.status(200).send(true);
-    });
+    rp(options)
+        .then(function (data) {
+            console.log('Data: ', data);
+            console.log("Data URL is: " + data.download_url);
+
+            const fileOptions = {
+                uri: data.download_url,
+                qs: {
+                    access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+                },
+                headers: {
+                    'User-Agent': 'Request-Promise'
+                }
+            };
+
+            rp(fileOptions)
+                .then(function (fileData) {
+                    let dataParsed = fileData.split("\n");
+                    console.log("Data Parsed: " + fileData);
+                    for (let i = 0; i < dataParsed.length; i++) {
+                        db.fileData[i] = dataParsed[i];
+                    }
+                    res.status(200).send(dataParsed);
+                })
+                .catch(function (err) {
+                    console.log("Database fill error: " + err);
+                    res.status(401).send("Could not fill database");
+                });
+
+
+        })
+        .catch(function (err) {
+            console.log("Fail in getting git data: " + err);
+            res.status(401).send("Fail in getting git data");
+        });
+});
+
+app.get('/all-comments', function (req, res) {
+    res.status(200).send(db.fileData);
+});
+
+app.get('/get-dict', function (req, res) {
+    res.status(200).send(db.fileDict);
 });
 
 app.post('/add-line-comment', function (req, res) {
@@ -47,8 +93,12 @@ app.post('/add-line-comment', function (req, res) {
 
     let lineValue = db.fileData[body.line - 1];
 
-    if(lineValue === undefined){
+    if (lineValue === undefined) {
         res.status(202).send("Line is empty, please select a different line.");
+        return;
+    } else if (lineValue.includes("for(") || lineValue.includes("for (")) {
+        res.status(202).send("Line is a for loop, please select a different line within the loop or select .");
+        return;
     }
 
     if (!db.fileDict.hasOwnProperty(lineValue)) {
@@ -57,7 +107,6 @@ app.post('/add-line-comment', function (req, res) {
 
     db.fileDict[lineValue].push(body.comment);
 
-    // TODO: Change to boolean
     res.status(200).send("Line " + body.line + " set to " + body.comment);
 });
 
@@ -76,7 +125,7 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("End: " + body.end);
     for (let i = body.start; i <= body.end; i++) {
         let lineValue = db.fileData[i - 1];
-        if(lineValue === undefined) continue;
+        if (lineValue === undefined || lineValue.includes("for(") || lineValue.includes("for (")) continue;
 
         console.log("Line Val: " + lineValue);
 
