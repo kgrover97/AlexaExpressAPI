@@ -93,9 +93,9 @@ app.post('/add-line-comment', function (req, res) {
         return;
     }
 
-    let lineValue = db.fileData[body.line - 1].trim();
+    let lineValue = db.fileData[body.line - 1];
 
-    if (lineValue === undefined || lineValue === "") {
+    if (lineValue === undefined || lineValue.trim() === "") {
         res.status(202).send("Line is empty, please select a different line.");
         return;
     } else if (lineValue.includes("for(") || lineValue.includes("for (")) {
@@ -126,8 +126,8 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("Start: " + body.start);
     console.log("End: " + body.end);
     for (let i = body.start; i <= body.end; i++) {
-        let lineValue = db.fileData[i - 1].trim();
-        if (lineValue === undefined || lineValue.includes("for(") || lineValue === "") continue;
+        let lineValue = db.fileData[i - 1];
+        if (lineValue === undefined || lineValue.trim().includes("for(") || lineValue.trim() === "") continue;
 
         console.log("Line Val: " + lineValue);
 
@@ -152,13 +152,13 @@ app.post('/get-line-comment', function (req, res) {
         throw new Error("Invalid Request follow format:\n{\n'line': number\n}");
     }
 
-    let lineValue = db.fileData[body.line - 1].trim();
+    let lineValue = db.fileData[body.line - 1];
 
     if (db.fileDict.hasOwnProperty(lineValue)) {
         let lineComment = db.fileDict[lineValue];
         res.status(200).send(lineComment);
     } else {
-        if(lineValue === undefined || lineValue === "" || lineValue.includes("for(")){
+        if(lineValue === undefined || lineValue.trim() === "" || lineValue.trim().includes("for(")){
             res.status(201).send("This line is blank or a for loop, please select a different line");
         }else{
             res.status(201).send(NO_COMMENT);
