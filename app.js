@@ -1,6 +1,8 @@
+import {GITHUB_KEY} from "./Constants";
+
 const express = require('express');
 const app = express();
-const fs = require('fs');
+// const fs = require('fs');
 const bodyParser = require('body-parser');
 // const http = require('http');
 // const request = require('request');
@@ -8,7 +10,7 @@ const rp = require('request-promise');
 import db from "./database";
 
 const port = 3000;
-const filePath = __dirname + '/MockProject/src/HelloWorld.java';
+// const filePath = __dirname + '/MockProject/src/HelloWorld.java';
 const NO_COMMENT = "There is no comment on this line, check that this line is not a for loop or a blank line";
 
 app.use(bodyParser.json());
@@ -30,7 +32,7 @@ app.get('/build-files', function (req, res) {
     const options = {
         uri: 'https://api.github.com/repos/kgrover97/HelloWorld/contents/HelloWorld.java',
         qs: {
-            access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+            access_token: GITHUB_KEY
         },
         headers: {
             'User-Agent': 'Request-Promise'
