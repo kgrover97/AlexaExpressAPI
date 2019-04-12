@@ -1,5 +1,7 @@
 'use strict';
 
+var _Constants = require('./Constants');
+
 var _database = require('./database');
 
 var _database2 = _interopRequireDefault(_database);
@@ -8,7 +10,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var express = require('express');
 var app = express();
-var fs = require('fs');
+// const fs = require('fs');
 var bodyParser = require('body-parser');
 // const http = require('http');
 // const request = require('request');
@@ -16,8 +18,8 @@ var rp = require('request-promise');
 
 
 var port = 3000;
-var filePath = __dirname + '/MockProject/src/HelloWorld.java';
-var NO_COMMENT = "There is no comment on this line, check that this line is not a for loop or a blank line";
+// const filePath = __dirname + '/MockProject/src/HelloWorld.java';
+var NO_COMMENT = "There is no comment on this line";
 
 app.use(bodyParser.json());
 
@@ -38,7 +40,7 @@ app.get('/build-files', function (req, res) {
     var options = {
         uri: 'https://api.github.com/repos/kgrover97/HelloWorld/contents/HelloWorld.java',
         qs: {
-            access_token: '42007401ca94547207c15f90c801a130a03f5e11'
+            access_token: _Constants.GITHUB_KEY
         },
         headers: {
             'User-Agent': 'Request-Promise'
@@ -95,7 +97,7 @@ app.post('/add-line-comment', function (req, res) {
 
     var lineValue = _database2.default.fileData[body.line - 1];
 
-    if (lineValue === undefined) {
+    if (lineValue === undefined || lineValue.trim() === "") {
         res.status(202).send("Line is empty, please select a different line.");
         return;
     } else if (lineValue.includes("for(") || lineValue.includes("for (")) {
@@ -126,7 +128,14 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("End: " + body.end);
     for (var i = body.start; i <= body.end; i++) {
         var lineValue = _database2.default.fileData[i - 1];
-        if (lineValue === undefined || lineValue.includes("for(") || lineValue.includes("for (")) continue;
+        if (lineValue === undefined || lineValue.trim().includes("for(") || lineValue.trim() === "") {
+            if (lineValue !== undefined) {
+                console.log("Trimmed line value is: " + lineValue.trim());
+            } else {
+                console.log("Line was undefined");
+            }
+            continue;
+        }
 
         console.log("Line Val: " + lineValue);
 
@@ -157,7 +166,11 @@ app.post('/get-line-comment', function (req, res) {
         var lineComment = _database2.default.fileDict[lineValue];
         res.status(200).send(lineComment);
     } else {
-        res.status(201).send(NO_COMMENT);
+        if (lineValue === undefined || lineValue.trim() === "" || lineValue.trim().includes("for(")) {
+            res.status(201).send("This line is blank or a for loop, please select a different line");
+        } else {
+            res.status(201).send(NO_COMMENT);
+        }
     }
 });
 

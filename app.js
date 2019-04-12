@@ -130,6 +130,8 @@ app.post('/add-line-comment-range', function (req, res) {
         if (lineValue === undefined || lineValue.trim().includes("for(") || lineValue.trim() === ""){
             if(lineValue !== undefined){
                 console.log("Trimmed line value is: " + lineValue.trim());
+            }else{
+                console.log("Line was undefined");
             }
             continue;
         }
