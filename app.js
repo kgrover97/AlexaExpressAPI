@@ -127,7 +127,12 @@ app.post('/add-line-comment-range', function (req, res) {
     console.log("End: " + body.end);
     for (let i = body.start; i <= body.end; i++) {
         let lineValue = db.fileData[i - 1];
-        if (lineValue === undefined || lineValue.trim().includes("for(") || lineValue.trim() === "") continue;
+        if (lineValue === undefined || lineValue.trim().includes("for(") || lineValue.trim() === ""){
+            if(lineValue !== undefined){
+                console.log("Trimmed line value is: " + lineValue.trim());
+            }
+            continue;
+        }
 
         console.log("Line Val: " + lineValue);
 
